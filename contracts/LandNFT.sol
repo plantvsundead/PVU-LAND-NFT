@@ -1807,9 +1807,9 @@ interface IClockAuction {
 contract LandCore is ERC721Pausable, AccessControl, Ownable {
     bytes32 public constant PAUSED_ROLE = keccak256('PAUSED_ROLE');
     uint256 public nextTokenId = 1;
-    uint256 public landType4 = 2;
-    uint256 public landType3 = 3;
-    uint256 public landType2 = 4;
+    uint256 public numberLandType4 = 2;
+    uint256 public numberLandType3 = 3;
+    uint256 public numberLandType2 = 4;
 
 
     uint256 public countLandType4;
@@ -1862,13 +1862,13 @@ contract LandCore is ERC721Pausable, AccessControl, Ownable {
         uint256 index = _randomLandId();
         uint256 landType;
 
-        if (index == 10 && countLandType4 < landType4) {
+        if (index == 10 && countLandType4 < numberLandType4) {
             landType = 4;
             countLandType4 += 1;
-        } else if (_random() % 3 == 0 && countLandType3 < landType3) {
+        } else if (_random() % 3 == 0 && countLandType3 < numberLandType3) {
             landType = 3;
             countLandType3 += 1;
-        } else if (_random() % 2 == 0 && countLandType2 < landType2) {
+        } else if (_random() % 2 == 0 && countLandType2 < numberLandType2) {
             landType = 2;
             countLandType2 += 1;
         } else {
@@ -1909,6 +1909,18 @@ contract LandCore is ERC721Pausable, AccessControl, Ownable {
     /// @param _address - Address of sale contract.
     function setSaleAuctionAddress(address _address) external onlyOwner {
         saleAuctionAddr = _address;
+    }
+
+    function setLandType4(uint256 _numberLandType4) external onlyOwner {
+        numberLandType4 = _numberLandType4;
+    }
+
+    function setLandType3(uint256 _numberLandType3) external onlyOwner {
+        numberLandType3 = _numberLandType3;
+    }
+
+    function setLandType2(uint256 _numberLandType2) external onlyOwner {
+        numberLandType2 = _numberLandType2;
     }
     
     /// @notice Returns all the relevant information about a specific Land.
