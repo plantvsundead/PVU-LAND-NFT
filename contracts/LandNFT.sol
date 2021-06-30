@@ -1845,7 +1845,7 @@ contract LandCore is ERC721Pausable, AccessControl, Ownable {
     
     function addLandId(uint256[] calldata _landId) external onlyOwner {
         for(uint i=0; i<_landId.length; i++) {
-            rangeOfId.push(i);
+            rangeOfId.push(_landId[i]);
         }
     }
     
