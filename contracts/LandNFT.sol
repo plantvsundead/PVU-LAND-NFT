@@ -1843,8 +1843,8 @@ contract LandCore is ERC721Pausable, AccessControl, Ownable {
         return rangeOfId;
     }
     
-    function addLandId(uint256 _start, uint256 _end) external onlyOwner {
-        for(uint i=_start; i<_end + 1; i++) {
+    function addLandId(uint256[] calldata _landId) external onlyOwner {
+        for(uint i=0; i<_landId.length; i++) {
             rangeOfId.push(i);
         }
     }
@@ -1854,9 +1854,9 @@ contract LandCore is ERC721Pausable, AccessControl, Ownable {
     }
 
     function createLand(address _owner, uint256 _amount) external {
-        // require(_amount >= price, "INVALID AMOUNT");
-        // require(rangeOfId.length > 0, "INSUFFFICIENT Land ID");
-        // require(IERC20(PVUToken).transferFrom(msg.sender, address(this), _amount));
+        require(_amount >= price, "INVALID AMOUNT");
+        require(rangeOfId.length > 0, "INSUFFFICIENT Land ID");
+        require(IERC20(PVUToken).transferFrom(msg.sender, address(this), _amount));
         
         uint256 tokenId = nextTokenId;
         uint256 index = _randomLandId();
