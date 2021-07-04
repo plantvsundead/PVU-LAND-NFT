@@ -1804,7 +1804,11 @@ interface IClockAuction {
     function createAuction(uint256 _tokenId, uint256 _startingPrice, uint256 _endingPrice, uint256 _duration, address _seller) external;
 }
 
-contract LandCore is ERC721Pausable, AccessControl, Ownable {
+interface IPLandCore {
+    function createBundleLand(address _owner, uint256 _numberPlant) external;
+}
+
+contract LandCore is ERC721Pausable, AccessControl, Ownable, IPLandCore {
     bytes32 public constant PAUSED_ROLE = keccak256('PAUSED_ROLE');
     uint256 public nextTokenId = 1;
     uint256 public numberLandType4 = 2;
@@ -1822,6 +1826,7 @@ contract LandCore is ERC721Pausable, AccessControl, Ownable {
     // Counts the number of Lands the contract owner has created.
     uint256 public price = 1* 10**18;
     address public PVUToken = 0x764DcC7F507857A603629fc7EBDCA6A93452c739;
+    address public bundleAddr;
     
     uint256 private nonce = 0;
     uint256[] private rangeOfId;
@@ -1835,6 +1840,12 @@ contract LandCore is ERC721Pausable, AccessControl, Ownable {
         _setupRole(PAUSED_ROLE, _msgSender());
     }
     
+    modifier onlyBundle() {
+        require(msg.sender == bundleAddr, "NOT_THE_BUNDLE");
+        _;
+    }
+    
+    
     function getRangeIdLength() external view returns(uint256){
         return rangeOfId.length;
     }
@@ -1845,7 +1856,7 @@ contract LandCore is ERC721Pausable, AccessControl, Ownable {
     
     function addLandId(uint256[] calldata _landId) external onlyOwner {
         for(uint i=0; i<_landId.length; i++) {
-            rangeOfId.push(_landId[i]);
+            rangeOfId.push(i);
         }
     }
     
@@ -1882,6 +1893,35 @@ contract LandCore is ERC721Pausable, AccessControl, Ownable {
         _remove(index);
 
         nextTokenId++;
+    }
+    
+    function createBundleLand(address _owner, uint256 _numberLand) external override onlyBundle {
+        for(uint i=0; i<_numberLand; i++){
+            uint256 tokenId = nextTokenId;
+            uint256 index = _randomLandId();
+            uint256 landType;
+    
+            if (index == 10 && countLandType4 < numberLandType4) {
+                landType = 4;
+                countLandType4 += 1;
+            } else if (_random() % 3 == 0 && countLandType3 < numberLandType3) {
+                landType = 3;
+                countLandType3 += 1;
+            } else if (_random() % 2 == 0 && countLandType2 < numberLandType2) {
+                landType = 2;
+                countLandType2 += 1;
+            } else {
+                landType = 1;
+                countLandType1 += 1;
+            }
+    
+            uint256 landId = rangeOfId[index];
+    
+            _mintLand(_owner, tokenId, landId, landType);
+            _remove(index);
+    
+            nextTokenId++;
+        }
     }
     
     function createSaleAuction(
@@ -1962,6 +2002,12 @@ contract LandCore is ERC721Pausable, AccessControl, Ownable {
     
     function getBalance() public view returns(uint256) {
         return IERC20(PVUToken).balanceOf(address(this));
+    }
+    
+// @dev Sets the reference to the bundle.  
+    /// @param _address - Address of bundle contract.
+    function setBundleAddress(address _address) external onlyOwner {
+        bundleAddr = _address;
     }
     
     function withdrawBalance() external onlyOwner {
