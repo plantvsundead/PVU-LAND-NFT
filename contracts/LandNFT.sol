@@ -1231,8 +1231,6 @@ contract ERC721 is Context, ERC165, IERC721, IERC721Enumerable {
         // id of the Land
         uint256 landId;
 
-        // The land type
-        uint256 landType;
     }
 
     /*** STORAGE ***/
@@ -1485,16 +1483,16 @@ contract ERC721 is Context, ERC165, IERC721, IERC721Enumerable {
      *
      * Emits a {Transfer} event.
      */
-    function _safeMint(address to, uint256 tokenId, uint256 LandId, uint256 landType) internal virtual {
-        _safeMint(to, tokenId, LandId, landType, "");
+    function _safeMint(address to, uint256 tokenId, uint256 LandId) internal virtual {
+        _safeMint(to, tokenId, LandId, "");
     }
 
     /**
      * @dev Same as {xref-ERC721-_safeMint-address-uint256-}[`_safeMint`], with an additional `data` parameter which is
      * forwarded in {IERC721Receiver-onERC721Received} to contract recipients.
      */
-    function _safeMint(address to, uint256 tokenId, uint256 landId, uint256 landType, bytes memory _data) internal virtual {
-        _mintLand(to, tokenId, landId, landType);
+    function _safeMint(address to, uint256 tokenId, uint256 landId, bytes memory _data) internal virtual {
+        _mintLand(to, tokenId, landId);
         require(_checkOnERC721Received(address(0), to, tokenId, _data), "ERC721: transfer to non ERC721Receiver implementer");
     }
 
@@ -1510,13 +1508,12 @@ contract ERC721 is Context, ERC165, IERC721, IERC721Enumerable {
      *
      * Emits a {Transfer} event.
      */
-    function _mintLand(address to, uint256 tokenId, uint256 landId, uint256 landType) internal virtual {
+    function _mintLand(address to, uint256 tokenId, uint256 landId) internal virtual {
         require(to != address(0), "ERC721: mint to the zero address");
         require(!_exists(tokenId), "ERC721: token already minted");
         
         Land memory _land = Land({
-            landId: landId,
-            landType: landType
+            landId: landId
         });
         
         lands.push(_land);
@@ -1811,17 +1808,7 @@ interface IPLandCore {
 contract LandCore is ERC721Pausable, AccessControl, Ownable, IPLandCore {
     bytes32 public constant PAUSED_ROLE = keccak256('PAUSED_ROLE');
     uint256 public nextTokenId = 1;
-    uint256 public numberLandType4 = 2;
-    uint256 public numberLandType3 = 3;
-    uint256 public numberLandType2 = 4;
 
-
-    uint256 public countLandType4;
-    uint256 public countLandType3;
-    uint256 public countLandType2;
-    uint256 public countLandType1;
-
-    
     address public saleAuctionAddr;
     // Counts the number of Lands the contract owner has created.
     uint256 public price = 1* 10**18;
@@ -1844,7 +1831,6 @@ contract LandCore is ERC721Pausable, AccessControl, Ownable, IPLandCore {
         require(msg.sender == bundleAddr, "NOT_THE_BUNDLE");
         _;
     }
-    
     
     function getRangeIdLength() external view returns(uint256){
         return rangeOfId.length;
@@ -1871,25 +1857,10 @@ contract LandCore is ERC721Pausable, AccessControl, Ownable, IPLandCore {
         
         uint256 tokenId = nextTokenId;
         uint256 index = _randomLandId();
-        uint256 landType;
-
-        if (index == 10 && countLandType4 < numberLandType4) {
-            landType = 4;
-            countLandType4 += 1;
-        } else if (_random() % 3 == 0 && countLandType3 < numberLandType3) {
-            landType = 3;
-            countLandType3 += 1;
-        } else if (_random() % 2 == 0 && countLandType2 < numberLandType2) {
-            landType = 2;
-            countLandType2 += 1;
-        } else {
-            landType = 1;
-            countLandType1 += 1;
-        }
 
         uint256 landId = rangeOfId[index];
 
-        _mintLand(_owner, tokenId, landId, landType);
+        _mintLand(_owner, tokenId, landId);
         _remove(index);
 
         nextTokenId++;
@@ -1899,25 +1870,10 @@ contract LandCore is ERC721Pausable, AccessControl, Ownable, IPLandCore {
         for(uint i=0; i<_numberLand; i++){
             uint256 tokenId = nextTokenId;
             uint256 index = _randomLandId();
-            uint256 landType;
-    
-            if (index == 10 && countLandType4 < numberLandType4) {
-                landType = 4;
-                countLandType4 += 1;
-            } else if (_random() % 3 == 0 && countLandType3 < numberLandType3) {
-                landType = 3;
-                countLandType3 += 1;
-            } else if (_random() % 2 == 0 && countLandType2 < numberLandType2) {
-                landType = 2;
-                countLandType2 += 1;
-            } else {
-                landType = 1;
-                countLandType1 += 1;
-            }
-    
+
             uint256 landId = rangeOfId[index];
     
-            _mintLand(_owner, tokenId, landId, landType);
+            _mintLand(_owner, tokenId, landId);
             _remove(index);
     
             nextTokenId++;
@@ -1951,30 +1907,17 @@ contract LandCore is ERC721Pausable, AccessControl, Ownable, IPLandCore {
         saleAuctionAddr = _address;
     }
 
-    function setLandType4(uint256 _numberLandType4) external onlyOwner {
-        numberLandType4 = _numberLandType4;
-    }
-
-    function setLandType3(uint256 _numberLandType3) external onlyOwner {
-        numberLandType3 = _numberLandType3;
-    }
-
-    function setLandType2(uint256 _numberLandType2) external onlyOwner {
-        numberLandType2 = _numberLandType2;
-    }
-    
     /// @notice Returns all the relevant information about a specific Land.
     /// @param _id The ID of the Land of interest.
     function getLand(uint256 _id)
         public
         view
         returns (
-        uint256,
-        uint256 
+        uint256
     ) {
         Land storage land = lands[_id - 1];
 
-        return(land.landId, land.landType);
+        return(land.landId);
     }
     
     function _randomLandId() internal returns (uint256) {
@@ -1984,14 +1927,6 @@ contract LandCore is ERC721Pausable, AccessControl, Ownable, IPLandCore {
         
         return index;
     }
-    
-    function _random() internal view returns (uint256) {
-        uint256 randomN = uint256(blockhash(block.number));
-        uint256 number = uint256(keccak256(abi.encodePacked(randomN, block.timestamp, nonce)));
-
-        return number;
-    }
-
 
     function _remove(uint _index) private {
         if (_index >= rangeOfId.length) return;
@@ -2004,7 +1939,7 @@ contract LandCore is ERC721Pausable, AccessControl, Ownable, IPLandCore {
         return IERC20(PVUToken).balanceOf(address(this));
     }
     
-// @dev Sets the reference to the bundle.  
+    // @dev Sets the reference to the bundle.  
     /// @param _address - Address of bundle contract.
     function setBundleAddress(address _address) external onlyOwner {
         bundleAddr = _address;
